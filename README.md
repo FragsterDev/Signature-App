@@ -18,7 +18,7 @@ The Signature App is a web-based application that allows users to create, custom
 - **JavaScript**: Core functionality, including drawing on the canvas and handling user input.
 - **LocalStorage**: Saving and retrieving signature data.
 
-##Link: https://fragsterdev.github.io/Signature-App/
+## Link: https://fragsterdev.github.io/Signature-App/
 
 ## Installation
 
