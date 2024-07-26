@@ -3,15 +3,15 @@ let history = [];
 const colorPicker = document.getElementById('colorPicker');
 const canvasColor = document.getElementById('canvasColor');
 const canvas = document.getElementById('myCanvas');
-const undoButton = document.getElementById('undoButton');
 const clearButton = document.getElementById('clearButton');
 const saveButton = document.getElementById('saveButton');
-const fontPicker = document.getElementById('fontPicker');
-const textInput = document.getElementById('textInput');
-const fontSizePicker = document.getElementById('fontSizePicker'); // add new element
-
+const fontSizePicker = document.getElementById('fontSizePicker');
 
 const ctx = canvas.getContext('2d');
+
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
 
 colorPicker.addEventListener('change', (event) => {
     ctx.fillStyle = event.target.value;
@@ -20,67 +20,73 @@ colorPicker.addEventListener('change', (event) => {
 
 canvasColor.addEventListener('change', (event) => {
     ctx.fillStyle = event.target.value;
-    ctx.fillRect(0, 0, 800, 500);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 });
 
-canvas.addEventListener('mousedown', (event) => {
+function startDrawing(x, y) {
     isDrawing = true;
-    lastX = event.offsetX;
-    lastY = event.offsetY;
-});
+    lastX = x;
+    lastY = y;
+}
 
-canvas.addEventListener('mousemove', (event) => {
+function draw(x, y) {
     if (isDrawing) {
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
-        ctx.lineTo(event.offsetX, event.offsetY);
+        ctx.lineTo(x, y);
         ctx.stroke();
-
-        lastX = event.offsetX;
-        lastY = event.offsetY;
+        lastX = x;
+        lastY = y;
     }
-});
+}
 
-canvas.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-});
-
-canvas.addEventListener('mouseup', () => {
+function stopDrawing() {
     isDrawing = false;
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', (event) => startDrawing(event.offsetX, event.offsetY));
+canvas.addEventListener('mousemove', (event) => draw(event.offsetX, event.offsetY));
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('mouseout', stopDrawing);
+
+// Touch events
+canvas.addEventListener('touchstart', (event) => {
+    const touch = event.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    startDrawing(touch.clientX - rect.left, touch.clientY - rect.top);
 });
+canvas.addEventListener('touchmove', (event) => {
+    event.preventDefault(); // Prevent scrolling when drawing
+    const touch = event.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    draw(touch.clientX - rect.left, touch.clientY - rect.top);
+});
+canvas.addEventListener('touchend', stopDrawing);
 
 fontSizePicker.addEventListener('change', (event) => {
     ctx.lineWidth = event.target.value;
-    // ctx.font = `${fontPicker.value} ${event.target.value}px`;
 });
 
 clearButton.addEventListener('click', () => {
-    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-})
+});
 
-// Add event listener for the save button
 saveButton.addEventListener('click', () => {
     localStorage.setItem('canvasContents', canvas.toDataURL());
-    // Create a new <a> element
     let link = document.createElement('a');
-
-    // Set the download attribute and the href attribute of the <a> element
     link.download = 'my-canvas.png';
     link.href = canvas.toDataURL();
-
-    // Dispatch a click event on the <a> element
     link.click();
 });
 
-// Add event listener for the retrieve button
 retrieveButton.addEventListener('click', () => {
-    // Retrieve the saved canvas contents from local storage
     let savedCanvas = localStorage.getItem('canvasContents');
-
     if (savedCanvas) {
         let img = new Image();
         img.src = savedCanvas;
-        ctx.drawImage(img, 0, 0);
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0);
+        };
     }
 });
